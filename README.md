@@ -101,22 +101,38 @@ The exact source directory structure may vary with the implementation. Keep this
 Create a `.env` file in the backend project root.
 
 ```env
-PORT=5000
 DATABASE_URL="postgresql://DB_USER:DB_PASSWORD@localhost:5432/DB_NAME?schema=public"
+
 JWT_SECRET="replace-with-a-long-random-secret"
+JWT_EXPIRES_IN="1d"
+
+SEED_ADMIN_EMAIL="admin@example.com"
+SEED_ADMIN_PASSWORD="replace-with-a-strong-admin-password"
+
+SEED_MENTOR_EMAIL="mentor@example.com"
+SEED_MENTOR_PASSWORD="replace-with-a-strong-mentor-password"
 ```
 
-Replace the database placeholders with your local PostgreSQL credentials and database name.
+### Variable Reference
 
-| Variable       | Required                                | Description                                          |
-| -------------- | --------------------------------------- | ---------------------------------------------------- |
-| `PORT`         | If used by the server configuration     | Port on which the Express API listens                |
-| `DATABASE_URL` | Yes                                     | PostgreSQL connection string used by Prisma          |
-| `JWT_SECRET`   | Yes, if referenced by JWT configuration | Secret used to sign and verify authentication tokens |
+| Variable               | Required                                             | Description                                              |
+| ---------------------- | ---------------------------------------------------- | -------------------------------------------------------- |
+| `DATABASE_URL`         | Yes                                                  | PostgreSQL connection string used by Prisma              |
+| `JWT_SECRET`           | Yes                                                  | Secret used to sign and verify JWT authentication tokens |
+| `JWT_EXPIRES_IN`       | Yes, if required by the authentication configuration | JWT expiration duration. For example, `1d` means one day |
+| `SEED_ADMIN_EMAIL`     | For seeding                                          | Email address of the initial administrator account       |
+| `SEED_ADMIN_PASSWORD`  | For seeding                                          | Password for the initial administrator account           |
+| `SEED_MENTOR_EMAIL`    | For seeding                                          | Email address of the initial mentor account              |
+| `SEED_MENTOR_PASSWORD` | For seeding                                          | Password for the initial mentor account                  |
 
-**Important:** The variable names above must match those referenced by your actual configuration. If your JWT configuration uses another variable name or supports an expiration setting, document that name as well.
+### Configuration Notes
 
-Never commit `.env` or real credentials to version control. Provide placeholders in `.env.example` instead.
+- Replace the database connection placeholders with your PostgreSQL credentials and database name.
+- Generate a strong, random value for `JWT_SECRET`.
+- Use strong, unique passwords for the seeded administrator and mentor accounts.
+- Keep all seed credentials private. Never commit the actual `.env` file to version control.
+- Add only placeholder values to `.env.example`.
+- The environment variable names must match those used in the backend's authentication and seed implementation.
 
 ## Installation
 
@@ -146,6 +162,74 @@ npx prisma db seed
 ```
 
 Use the command supported by your installed Prisma configuration. Do not commit or publish seeded account passwords.
+
+## Database Migration and Seeding
+
+ProjectHub uses PostgreSQL with Prisma ORM.
+
+### Step 1: Configure the Database
+
+Ensure PostgreSQL is running and create the database configured in `DATABASE_URL`.
+
+Create the backend `.env` file and provide the required database and authentication variables.
+
+### Step 2: Apply Database Migrations
+
+Run the following command from the backend project root:
+
+```bash
+npx prisma migrate dev
+```
+
+This applies the project's Prisma migrations and synchronizes the database schema in development.
+
+### Step 3: Configure Seed Credentials
+
+Set the following variables in `.env` before running the seed process:
+
+```env
+SEED_ADMIN_EMAIL="admin@example.com"
+SEED_ADMIN_PASSWORD="replace-with-a-strong-admin-password"
+
+SEED_MENTOR_EMAIL="mentor@example.com"
+SEED_MENTOR_PASSWORD="replace-with-a-strong-mentor-password"
+```
+
+The seed script uses these values to create the initial administrator and mentor accounts.
+
+### Step 4: Run the Seed Script
+
+If the seed command is configured in `prisma.config.ts` or `package.json`, execute the configured command.
+
+For a standard Prisma seed configuration, the command is:
+
+```bash
+npx prisma db seed
+```
+
+The seed process should create the initial accounts with the appropriate roles:
+
+- **Admin:** `ADMIN`
+- **Mentor:** `MENTOR`
+
+Passwords should be hashed before storage. The seed script should not store plaintext passwords in the database.
+
+### Step 5: Verify the Seeded Accounts
+
+After seeding completes:
+
+1. Check the command output for errors.
+2. Verify that the administrator and mentor records exist in the database.
+3. Sign in using the configured credentials to confirm that authentication works.
+4. Confirm that the mentor can access the Mentor Dashboard and that role-based authorization works as expected.
+
+### Important Notes
+
+- Run migrations before seeding.
+- Do not share or commit the actual seed passwords.
+- Before rerunning the seed command, confirm whether the seed implementation is idempotent and how it handles existing email addresses.
+- For production deployments, use the project's production migration procedure and a controlled seeding process. Do not use development migrations against a production database.
+- If the seed command is not configured, configure the seed entry point first according to the project's existing Prisma setup.
 
 ## Running the API
 
