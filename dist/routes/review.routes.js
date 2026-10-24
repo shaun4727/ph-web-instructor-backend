@@ -1,0 +1,14 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const review_controller_1 = require("../controllers/review_controller");
+const middlewares_1 = require("../middlewares");
+const authorize_1 = require("../middlewares/authorize");
+const client_1 = require("../generated/prisma/client");
+const list_reviews_controller_1 = require("../controllers/list_reviews_controller");
+const review_stats_controller_1 = require("../controllers/review_stats_controller");
+const reviewRouter = (0, express_1.Router)();
+reviewRouter.patch('/:id', middlewares_1.authenticate, (0, authorize_1.authorize)(client_1.Role.MENTOR), review_controller_1.reviewSubmission);
+reviewRouter.get('/', middlewares_1.authenticate, (0, authorize_1.authorize)(client_1.Role.MENTOR), list_reviews_controller_1.listReviews);
+reviewRouter.get('/stats', middlewares_1.authenticate, (0, authorize_1.authorize)(client_1.Role.MENTOR), review_stats_controller_1.getReviewStats);
+exports.default = reviewRouter;

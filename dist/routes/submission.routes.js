@@ -1,0 +1,12 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const my_submission_controller_1 = require("../controllers/my_submission_controller");
+const submission_controller_1 = require("../controllers/submission_controller");
+const client_1 = require("../generated/prisma/client");
+const middlewares_1 = require("../middlewares");
+const authorize_1 = require("../middlewares/authorize");
+const submissionRouter = (0, express_1.Router)();
+submissionRouter.post('/', middlewares_1.authenticate, (0, authorize_1.authorize)(client_1.Role.STUDENT), submission_controller_1.createSubmission);
+submissionRouter.get('/', middlewares_1.authenticate, (0, authorize_1.authorize)(client_1.Role.STUDENT), my_submission_controller_1.getMySubmission);
+exports.default = submissionRouter;

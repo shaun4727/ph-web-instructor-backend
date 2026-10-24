@@ -35,8 +35,14 @@ model User {
   @@map("users")
 }
 
+
 model Submission {
   id          String           @id @default(uuid()) @db.Uuid
+  projectName String           @map("project_name") @db.VarChar(150)
+  repoUrl     String           @map("repo_url") @db.VarChar(2048)
+  liveLink    String           @map("live_link") @db.VarChar(2048)
+  description String           @db.Text
+
   userId      String           @unique @map("user_id") @db.Uuid
   status      SubmissionStatus @default(PENDING)
   submittedAt DateTime         @default(now()) @map("submitted_at")
@@ -45,7 +51,7 @@ model Submission {
   reviewNotes String?          @map("review_notes") @db.Text
 
   user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  reviewer    User?            @relation("SubmissionReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
+  reviewer    User?             @relation("SubmissionReviewer", fields: [reviewedBy], references: [id], onDelete: SetNull)
 
   @@index([status, submittedAt])
   @@index([reviewedBy])
